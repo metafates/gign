@@ -10,3 +10,4 @@ clap = { version = "3.2.8", features = ["cargo"] }
 triple_accel = "*"
 walkdir = "2.3.2"
 dirs = "1.0.4"
+colored = "2"

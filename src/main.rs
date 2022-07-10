@@ -1,7 +1,7 @@
 use clap::command;
 use clap::parser::ValuesRef;
 
-use ignore::{error, generate_gitignore, get_templates, init_default_templates};
+use ignore::{error, generate_gitignore, get_templates, init_default_templates, TemplateEntry};
 
 fn main() {
     let cmd = command!("ignore")
@@ -67,8 +67,11 @@ fn handle_list_argument() {
 
     match get_templates() {
         Ok(available_templates) => {
-            for (_, entry) in available_templates {
-                println!("{}", entry.title());
+            let mut entries: Vec<&TemplateEntry> = available_templates.values().collect();
+            entries.sort_by(|a, b| a.prefix().cmp(b.prefix()));
+
+            for entry in entries {
+                println!("{}", entry.title_colored());
             }
         }
         Err(err) => {

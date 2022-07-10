@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::process::exit;
 
 use clap::parser::ValuesRef;
+use colored::Colorize;
 use triple_accel::levenshtein_exp;
 use walkdir::WalkDir;
 
@@ -43,7 +44,19 @@ impl TemplateEntry {
     }
 
     pub fn title(&self) -> String {
-        format!("{}:{}", self.prefix(), self.name())
+        if self.prefix.is_empty() {
+            self.name.clone()
+        } else {
+            format!("{}:{}", self.prefix(), self.name())
+        }
+    }
+
+    pub fn title_colored(&self) -> String {
+        if self.prefix.is_empty() {
+            self.name.clone()
+        } else {
+            format!("{}{}{}", self.prefix().green(), ":".magenta(), self.name())
+        }
     }
 
     pub fn to_string(&self) -> String {
@@ -168,7 +181,7 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>) -> Result<String, Bo
                         if let Some(closest) = closest {
                             Err(Box::new(std::io::Error::new(
                                 std::io::ErrorKind::InvalidInput,
-                                format!("Template '{}' not found, did you mean '{}'?", name, closest.title()),
+                                format!("Template '{}' not found, did you mean '{}'?", name, closest.title_colored()),
                             )))
                         } else {
                             Err(Box::new(std::io::Error::new(
