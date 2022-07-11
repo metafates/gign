@@ -1,4 +1,4 @@
-use clap::command;
+use clap::{ArgMatches, command};
 use clap::parser::ValuesRef;
 
 use ignore::{
@@ -21,7 +21,14 @@ fn main() {
                 .multiple_values(true),
         )
         .subcommand(command!("list")
-            .about("List all available templates"))
+            .about("List all available templates")
+            .arg(
+                clap::Arg::new("prefix")
+                    .help("The prefix to filter the templates")
+                    .exclusive(true)
+                    .takes_value(true)
+                    .multiple_values(true),
+            ))
         .subcommand(command!("update")
             .about("Update the default templates database"))
         .subcommand(command!("where")
@@ -33,8 +40,8 @@ fn main() {
         handle_template_argument(templates);
     } else {
         match matches.subcommand() {
-            Some(("list", _)) => {
-                handle_list_command();
+            Some(("list", matches)) => {
+                handle_list_command(matches);
             }
             Some(("update", _)) => {
                 handle_update_command();
@@ -64,7 +71,7 @@ fn handle_template_argument(templates: ValuesRef<String>) -> () {
     }
 }
 
-fn handle_list_command() {
+fn handle_list_command(matches: &ArgMatches) {
     if let Err(err) = init_default_templates() {
         error(err.to_string().as_str());
     }
@@ -74,8 +81,17 @@ fn handle_list_command() {
             let mut entries: Vec<&TemplateEntry> = available_templates.values().collect();
             entries.sort_by(|a, b| a.prefix().cmp(b.prefix()));
 
-            for entry in entries {
-                println!("{}", entry.title_colored());
+            if let Some(filter_prefixes) = matches.get_many("prefix") {
+                let filter_prefixes: Vec<String> = filter_prefixes.into_iter().map(|s: &String| s.to_string()).collect();
+                for entry in entries {
+                    if filter_prefixes.contains(&entry.prefix().to_string()) {
+                        println!("{}", entry.title_colored());
+                    }
+                }
+            } else {
+                for entry in entries {
+                    println!("{}", entry.title_colored());
+                }
             }
         }
         Err(err) => {

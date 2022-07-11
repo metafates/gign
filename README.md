@@ -4,17 +4,22 @@
     <img width="200" src="assets/logo.png">
 </p>
 
-<h3 align="center">A Gitignore Generator</h3>
+<h3 align="center">
+    A Gitignore Generator
+</h3>
 
 ---
 
-## Example
+## Examples
 
 ```bash
 ignore default:Rust global:Linux > .gitignore
 
 # if you use fish shell you can do this cool trick
 ignore global:{Linux, macOS, Windows}
+
+# ignore all javascript related templates
+ignore $(ignore list javascript) default:Node
 ``` 
 
 > see `ignore list` to show all available templates
