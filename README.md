@@ -20,6 +20,9 @@ ignore global:{Linux, macOS, Windows}
 
 # ignore all javascript related templates
 ignore $(ignore list javascript) default:Node
+
+# search for template with fzf and use it
+ignore $(ignore list | fzf)
 ``` 
 
 > see `ignore list` to show all available templates
