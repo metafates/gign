@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::process::{Command, exit};
 
@@ -74,7 +75,26 @@ impl TemplateEntry {
         if self.prefix.is_empty() {
             self.name.clone()
         } else {
-            format!("{}{}{}", self.prefix().green(), ":".magenta(), self.name())
+            let colored_prefix = {
+                let prefix = self.prefix();
+                // get hash of the prefix
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                prefix.hash(&mut hasher);
+                let hash = hasher.finish();
+
+                if hash % 5 == 0 {
+                    prefix.green()
+                } else if hash % 4 == 0 {
+                    prefix.yellow()
+                } else if hash % 3 == 0 {
+                    prefix.cyan()
+                } else if hash % 2 == 0 {
+                    prefix.magenta()
+                } else {
+                    prefix.blue()
+                }
+            };
+            format!("{}{}{}", colored_prefix, ":".magenta(), self.name())
         }
     }
 

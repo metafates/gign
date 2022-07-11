@@ -8,21 +8,26 @@
 
 ---
 
-# Example
+## Example
 
-```
+```bash
 ignore default:Rust global:Linux > .gitignore
+
+# if you use fish shell you can do this cool trick
+ignore global:{Linux, macOS, Windows}
 ``` 
 
 > see `ignore list` to show all available templates
 
-# Install
+## Install
+
+Using [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 
 ```
 cargo install --git https://github.com/metafates/ignore
 ```
 
-# Custom templates
+## Custom templates
 
 By default, templates are taken from [this repository](https://github.com/github/gitignore)
 
@@ -44,7 +49,7 @@ ignore extras:custom
 | `extras/custom.gitignore`      | `extras:custom` |
 | `extras/misc/custom.gitignore` | `misc:custom`   |
 
-# Help
+## Help
 
 ```
 USAGE:
