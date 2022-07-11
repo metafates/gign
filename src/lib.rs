@@ -129,7 +129,7 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
             if !path.exists() {
                 return Err(Box::new(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    "Templates path does not exist",
+                    "templates path does not exist",
                 )));
             }
 
@@ -167,7 +167,7 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
                 if hash_map.contains_key(entry.title().as_str()) {
                     return Err(Box::new(std::io::Error::new(
                         std::io::ErrorKind::AlreadyExists,
-                        format!("Duplicate template name: {}", entry.name()),
+                        format!("duplicate template name: {}", entry.name()),
                     )));
                 }
 
@@ -179,7 +179,7 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
         None => {
             Err(Box::new(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                "Could not find the application directory",
+                "could not find the application directory",
             )))
         }
     }
@@ -238,12 +238,13 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Resul
                         }
 
                         return {
-                            let hint = "Hint: use --auto flag to automatically resolve such issues";
+                            let hint = str_hint("use --auto flag to automatically resolve such issues");
                             let message = format!(
-                                "Template '{}' not found, did you mean '{}'?\n\n{}",
+                                "template '{}' not found, did you mean '{}'?\n\n{}",
                                 name,
                                 closest.title_colored(),
-                                hint.dimmed());
+                                hint
+                            );
 
                             Err(Box::new(std::io::Error::new(
                                 std::io::ErrorKind::InvalidInput,
@@ -258,7 +259,7 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Resul
 
                     Err(Box::new(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
-                        format!("Template '{}' not found", name),
+                        format!("template '{}' not found", name),
                     )))
                 },
             )?;
@@ -304,7 +305,7 @@ pub fn clone_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
             if !output.status.success() {
                 return Err(Box::new(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    "Failed to clone templates repository",
+                    "failed to clone templates repository",
                 )));
             }
 
@@ -312,7 +313,7 @@ pub fn clone_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
         }
         None => Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            "Could not find app directory",
+            "could not find app directory",
         )))
     }
 }
@@ -323,6 +324,12 @@ pub fn pull_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
     match get_app_dir() {
         Some(path) => {
             let target_path = path.join(TEMPLATES_REPO_DIR);
+
+            // clone repository if it doesn't exist yet instead of pulling it
+            if !target_path.exists() {
+                clone_templates_repo()?;
+                return Ok(target_path);
+            }
 
             // run git pull
             let output = Command::new("git")
@@ -337,7 +344,7 @@ pub fn pull_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
             if !output.status.success() {
                 return Err(Box::new(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    "Failed to pull templates repository",
+                    "failed to pull templates repository",
                 )));
             }
 
@@ -345,7 +352,7 @@ pub fn pull_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
         }
         None => Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            "Could not find app directory",
+            "could not find app directory",
         )))
     }
 }
@@ -356,14 +363,16 @@ pub fn init_default_templates() -> Result<(), Box<dyn Error>> {
         Some(path) => {
             if !path.exists() {
                 fs::create_dir_all(path)?;
-                clone_templates_repo()?;
+                if let Err(err) = clone_templates_repo() {
+                    warning(err.to_string().as_str());
+                }
             }
 
             Ok(())
         }
         None => Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            "Could not find app directory",
+            "could not find app directory",
         )))
     }
 }
@@ -380,6 +389,14 @@ pub fn command_is_available(name: &str) -> bool {
 
 /// Helper function to print error message and exit with code 1
 pub fn error(msg: &str) {
-    eprintln!("{}", msg);
+    eprintln!("{}: {}", "error".red().bold(), msg);
     exit(1);
+}
+
+fn warning(msg: &str) {
+    eprintln!("{}: {}", "warning".yellow().bold(), msg);
+}
+
+fn str_hint(msg: &str) -> String {
+    format!("{}: {}", "hint".dimmed().bold(), msg)
 }
