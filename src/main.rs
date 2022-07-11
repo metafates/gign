@@ -1,11 +1,18 @@
 use clap::command;
 use clap::parser::ValuesRef;
 
-use ignore::{error, generate_gitignore, get_app_dir, get_templates, init_default_templates, pull_templates_repo, TemplateEntry};
+use ignore::{
+    error,
+    generate_gitignore,
+    get_app_dir,
+    get_templates,
+    init_default_templates,
+    pull_templates_repo,
+    TemplateEntry
+};
 
 fn main() {
     let mut cmd = command!("ignore")
-        .about("Generate a gitignore file from the given template names.")
         .arg(
             clap::Arg::with_name("template")
                 .short('t')
