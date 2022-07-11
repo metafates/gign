@@ -24,12 +24,12 @@ cargo install --git https://github.com/metafates/ignore
 
 # Custom templates
 
-By default, templates are taken from the [this repository](https://github.com/github/gitignore)
+By default, templates are taken from [this repository](https://github.com/github/gitignore)
 
 To add custom template just create `[name].gitignore`
 file inside `ignore where` directory.
 
-Files inside folders will be prefixed with the parent folder name (except for root templates).
+Files inside folders will be prefixed with the parent folder name (except for the root templates).
 
 For example, if you have `custom.gitignore` file inside `extras/` folder,
 you can use it like this:
