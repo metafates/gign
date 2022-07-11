@@ -157,18 +157,24 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
     }
 }
 
-/// Find the closest string to the given string in the given vector of strings.
+/// Find the closest template to the given name
 /// Returns None if no suggestion is found.
-pub fn find_closest<'a>(target: &str, patterns: Vec<&'a TemplateEntry>) -> Option<&'a TemplateEntry> {
+pub fn find_closest<'a>(target: &str, templates: Vec<&'a TemplateEntry>) -> Option<&'a TemplateEntry> {
     let mut closest_distance = u32::MAX;
     let mut closest_template = None;
 
+    let target = if target.contains(":") {
+        target.split(":").last().unwrap()
+    } else {
+        target
+    };
 
-    for pattern in patterns {
-        let distance = levenshtein_exp(target.as_ref(), pattern.name().as_ref());
+
+    for template in templates {
+        let distance = levenshtein_exp(target.as_ref(), template.name().as_ref());
         if distance < closest_distance && distance < 10 {
             closest_distance = distance;
-            closest_template = Some(pattern);
+            closest_template = Some(template);
         }
     }
 
