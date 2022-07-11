@@ -16,6 +16,12 @@ ignore --template default:Rust global:Linux > .gitignore
 
 > see `ignore list` to show all available templates
 
+# Install
+
+```
+cargo install --git https://github.com/metafates/ignore
+```
+
 # Custom templates
 
 By default, templates are taken from the [this repository](https://github.com/github/gitignore)
