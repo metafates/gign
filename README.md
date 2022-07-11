@@ -11,7 +11,7 @@
 # Example
 
 ```
-ignore --template default:Rust global:Linux > .gitignore
+ignore default:Rust global:Linux > .gitignore
 ``` 
 
 > see `ignore list` to show all available templates
@@ -35,7 +35,7 @@ For example, if you have `custom.gitignore` file inside `extras/` folder,
 you can use it like this:
 
 ```
-ignore --template extras:custom
+ignore extras:custom
 ```
 
 | Location                       | Name            |
@@ -48,12 +48,14 @@ ignore --template extras:custom
 
 ```
 USAGE:
-    ignore [OPTIONS] [SUBCOMMAND]
+    ignore [template]... [SUBCOMMAND]
+
+ARGS:
+    <template>...    The templates to ignore
 
 OPTIONS:
-    -h, --help                      Print help information
-    -t, --template <template>...    The templates to ignore
-    -V, --version                   Print version information
+    -h, --help       Print help information
+    -V, --version    Print version information
 
 SUBCOMMANDS:
     help      Print this message or the help of the given subcommand(s)

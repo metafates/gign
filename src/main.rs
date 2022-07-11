@@ -8,15 +8,13 @@ use ignore::{
     get_templates,
     init_default_templates,
     pull_templates_repo,
-    TemplateEntry
+    TemplateEntry,
 };
 
 fn main() {
     let mut cmd = command!("ignore")
         .arg(
-            clap::Arg::with_name("template")
-                .short('t')
-                .long("template")
+            clap::Arg::new("template")
                 .help("The templates to ignore")
                 .exclusive(true)
                 .takes_value(true)
