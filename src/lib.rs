@@ -213,7 +213,7 @@ pub fn find_closest<'a>(target: &str, templates: Vec<&'a TemplateEntry>) -> Opti
 
 
 /// Generate a gitignore file from the given template names.
-pub fn generate_gitignore(mut templates: ValuesRef<String>) -> Result<String, Box<dyn Error>> {
+pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Result<String, Box<dyn Error>> {
     match get_templates() {
         Ok(available_templates) => {
             let res = templates.try_fold(
@@ -229,15 +229,23 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>) -> Result<String, Bo
 
                         let closest = find_closest(name, available_templates);
                         if let Some(closest) = closest {
-                            Err(Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidInput,
-                                format!("Template '{}' not found, did you mean '{}'?", name, closest.title_colored()),
-                            )))
+                            if auto {
+                                Ok(format!("{}{}", acc, closest.with_template().unwrap().to_string()))
+                            } else {
+                                Err(Box::new(std::io::Error::new(
+                                    std::io::ErrorKind::InvalidInput,
+                                    format!("Template '{}' not found, did you mean '{}'?", name, closest.title_colored()),
+                                )))
+                            }
                         } else {
-                            Err(Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidInput,
-                                format!("Template '{}' not found", name),
-                            )))
+                            if auto {
+                                Ok(acc)
+                            } else {
+                                Err(Box::new(std::io::Error::new(
+                                    std::io::ErrorKind::InvalidInput,
+                                    format!("Template '{}' not found", name),
+                                )))
+                            }
                         }
                     }
                 },

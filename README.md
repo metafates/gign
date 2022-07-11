@@ -23,6 +23,9 @@ ignore $(ignore list javascript) default:Node
 
 # search for template with fzf and use it
 ignore $(ignore list | fzf)
+
+# make it less verbose
+ignore --auto c++ windows 
 ``` 
 
 > see `ignore list` to show all available templates
@@ -61,12 +64,13 @@ ignore extras:custom
 
 ```
 USAGE:
-    ignore [template]... [SUBCOMMAND]
+    ignore [OPTIONS] [template]... [SUBCOMMAND]
 
 ARGS:
     <template>...    The templates to ignore
 
 OPTIONS:
+    -a, --auto       Automatically resolve unknown templates
     -h, --help       Print help information
     -V, --version    Print version information
 

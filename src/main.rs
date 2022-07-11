@@ -16,9 +16,15 @@ fn main() {
         .arg(
             clap::Arg::new("template")
                 .help("The templates to ignore")
-                .exclusive(true)
                 .takes_value(true)
                 .multiple_values(true),
+        )
+        .arg(
+            clap::Arg::new("auto")
+                .help("Automatically resolve unknown templates")
+                .long("auto")
+                .short('a')
+                .takes_value(false),
         )
         .subcommand(command!("list")
             .about("List all available templates")
@@ -37,7 +43,7 @@ fn main() {
     let matches = cmd.clone().get_matches();
 
     if let Some(templates) = matches.get_many("template") {
-        handle_template_argument(templates);
+        handle_template_argument(templates, matches.is_present("auto"));
     } else {
         match matches.subcommand() {
             Some(("list", matches)) => {
@@ -56,12 +62,12 @@ fn main() {
     }
 }
 
-fn handle_template_argument(templates: ValuesRef<String>) -> () {
+fn handle_template_argument(templates: ValuesRef<String>, auto: bool) -> () {
     if let Err(err) = init_default_templates() {
         error(err.to_string().as_str())
     }
 
-    match generate_gitignore(templates) {
+    match generate_gitignore(templates, auto) {
         Ok(gitignore) => {
             println!("{}", gitignore);
         }
