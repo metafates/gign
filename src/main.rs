@@ -1,7 +1,7 @@
 use clap::command;
 use clap::parser::ValuesRef;
 
-use ignore::{error, generate_gitignore, get_templates, init_default_templates, pull_templates_repo, TemplateEntry};
+use ignore::{error, generate_gitignore, get_app_dir, get_templates, init_default_templates, pull_templates_repo, TemplateEntry};
 
 fn main() {
     let mut cmd = command!("ignore")
@@ -18,7 +18,9 @@ fn main() {
         .subcommand(command!("list")
             .about("List all available templates"))
         .subcommand(command!("update")
-            .about("Update the default templates database"));
+            .about("Update the default templates database"))
+        .subcommand(command!("where")
+            .about("Print the templates path"));
 
     let matches = cmd.clone().get_matches();
 
@@ -31,6 +33,9 @@ fn main() {
             }
             Some(("update", _)) => {
                 handle_update_command();
+            }
+            Some(("where", _)) => {
+                handle_where_command();
             }
             _ => {
                 cmd.print_help().unwrap();
@@ -85,4 +90,15 @@ fn handle_update_command() {
     }
 
     println!("Templates updated!");
+}
+
+fn handle_where_command() {
+    match get_app_dir() {
+        Some(path) => {
+            println!("{}", path.display());
+        }
+        None => {
+            error("Could not find the application directory");
+        }
+    }
 }

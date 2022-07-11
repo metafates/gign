@@ -19,15 +19,17 @@ pub struct IgnoreTemplate {
 pub struct TemplateEntry {
     prefix: String,
     name: String,
-    template: String,
+    template: Option<String>,
+    path: PathBuf,
 }
 
 impl TemplateEntry {
-    pub fn new(prefix: String, name: String, template: String) -> TemplateEntry {
+    pub fn new(prefix: String, name: String, path: PathBuf) -> TemplateEntry {
         TemplateEntry {
             prefix,
             name,
-            template,
+            template: None,
+            path,
         }
     }
 
@@ -39,8 +41,21 @@ impl TemplateEntry {
         &self.prefix
     }
 
-    pub fn template(&self) -> &str {
-        &self.template
+    pub fn with_template(&self) -> Result<Self, Box<dyn Error>> {
+        let template = fs::read_to_string(&self.path)?;
+        Ok(TemplateEntry {
+            prefix: self.prefix.clone(),
+            name: self.name.clone(),
+            template: Some(template),
+            path: self.path.clone(),
+        })
+    }
+
+    pub fn template(&self) -> Option<&String> {
+        match &self.template {
+            Some(template) => Some(template),
+            None => None,
+        }
     }
 
     pub fn title(&self) -> String {
@@ -61,6 +76,8 @@ impl TemplateEntry {
 
     pub fn to_string(&self) -> String {
         let hashes = "#".repeat(self.name().len() + 4);
+        let name = self.name();
+        let template = self.template().unwrap();
 
         format!("
 {hashes}
@@ -71,7 +88,7 @@ impl TemplateEntry {
 
 
 
-", self.name(), self.template())
+", name, template)
     }
 }
 
@@ -88,14 +105,15 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
                 )));
             }
 
-            // filter only files that has .gitignore extension
             let entries: Vec<TemplateEntry> = WalkDir::new(path)
                 .into_iter()
                 .filter_entry(|e| {
+                    // filter only files that has .gitignore extension
                     if e.file_type().is_file() || e.file_type().is_symlink() {
                         return e.path().extension() == Some("gitignore".as_ref());
                     }
 
+                    // ignore non-related directories
                     !e.path().ends_with(".git") &&
                         !e.path().ends_with(".github")
                 })
@@ -107,12 +125,11 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
                 .map(|e| {
                     let name = e.file_name().to_string_lossy().trim_end_matches(".gitignore").to_string();
                     let prefix = e.path().parent().unwrap().file_name().unwrap().to_string_lossy().to_string();
-                    let template = fs::read_to_string(e.path()).unwrap();
 
                     if prefix == "ignore" {
-                        TemplateEntry::new("".to_string(), name, template)
+                        TemplateEntry::new("".to_string(), name, e.path().to_path_buf())
                     } else {
-                        TemplateEntry::new(prefix.to_lowercase(), name, template)
+                        TemplateEntry::new(prefix.to_lowercase(), name, e.path().to_path_buf())
                     }
                 })
                 .collect();
@@ -171,7 +188,8 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>) -> Result<String, Bo
                 "".to_string(),
                 |acc, name| {
                     if available_templates.contains_key(name) {
-                        Ok(format!("{}{}", acc, &available_templates[name].to_string()))
+                        let template = available_templates.get(name).unwrap();
+                        Ok(format!("{}{}", acc, template.with_template().unwrap().to_string()))
                     } else {
                         let available_templates: Vec<&TemplateEntry> = available_templates
                             .values()
