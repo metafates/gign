@@ -197,7 +197,7 @@ pub fn find_closest<'a>(target: &str, templates: Vec<&'a TemplateEntry>) -> Opti
 
 
     for template in templates {
-        let distance = levenshtein_exp(target.as_ref(), template.name().as_ref());
+        let distance = levenshtein_exp(target.to_lowercase().as_ref(), template.name().to_lowercase().as_ref());
         if distance < closest_distance && distance < 10 {
             closest_distance = distance;
             closest_template = Some(template);
