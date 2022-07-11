@@ -8,7 +8,12 @@
     A Gitignore Generator
 </h3>
 
----
+## Table of Contents
+
+- [Examples](#examples)
+- [Install](#install)
+- [Custom templates](#custom-templates)
+- [Help](#help)
 
 ## Examples
 
@@ -16,16 +21,16 @@
 ignore default:Rust global:Linux > .gitignore
 
 # if you use fish shell you can do this cool trick
-ignore global:{Linux, macOS, Windows}
+ignore global:{Linux, macOS, Windows} > .gitignore
 
 # ignore all javascript related templates
-ignore $(ignore list javascript) default:Node
+ignore $(ignore list javascript) default:Node > .gitignore
 
 # search for template with fzf and use it
-ignore $(ignore list | fzf)
+ignore $(ignore list | fzf) > .gitignore
 
 # make it less verbose
-ignore --auto c++ windows 
+ignore --auto c++ windows > .gitignore
 ``` 
 
 > see `ignore list` to show all available templates

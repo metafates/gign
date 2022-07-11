@@ -10,7 +10,9 @@ use colored::Colorize;
 use triple_accel::levenshtein_exp;
 use walkdir::WalkDir;
 
+const TEMPLATES_ROOT_DIR: &str = "ignore";
 const TEMPLATES_REPO: &str = "https://github.com/github/gitignore.git";
+const TEMPLATES_REPO_DIR: &str = "default";
 
 /// A struct that represents a template in the templates database.
 pub struct TemplateEntry {
@@ -152,7 +154,7 @@ pub fn get_templates() -> Result<HashMap<String, TemplateEntry>, Box<dyn Error>>
                     let name = e.file_name().to_string_lossy().trim_end_matches(".gitignore").to_string();
                     let prefix = e.path().parent().unwrap().file_name().unwrap().to_string_lossy().to_string();
 
-                    if prefix == "ignore" {
+                    if prefix == TEMPLATES_ROOT_DIR {
                         TemplateEntry::new("".to_string(), name, e.path().to_path_buf())
                     } else {
                         TemplateEntry::new(prefix.to_lowercase(), name, e.path().to_path_buf())
@@ -205,10 +207,10 @@ pub fn find_closest<'a>(target: &str, templates: Vec<&'a TemplateEntry>) -> Opti
     }
 
     if let Some(entry) = closest_template {
-        Some(entry)
-    } else {
-        None
+        return Some(entry);
     }
+
+    None
 }
 
 
@@ -221,49 +223,57 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Resul
                 |acc, name| {
                     if available_templates.contains_key(name) {
                         let template = available_templates.get(name).unwrap();
-                        Ok(format!("{}{}", acc, template.with_template().unwrap().to_string()))
-                    } else {
-                        let available_templates: Vec<&TemplateEntry> = available_templates
-                            .values()
-                            .collect();
-
-                        let closest = find_closest(name, available_templates);
-                        if let Some(closest) = closest {
-                            if auto {
-                                Ok(format!("{}{}", acc, closest.with_template().unwrap().to_string()))
-                            } else {
-                                Err(Box::new(std::io::Error::new(
-                                    std::io::ErrorKind::InvalidInput,
-                                    format!("Template '{}' not found, did you mean '{}'?", name, closest.title_colored()),
-                                )))
-                            }
-                        } else {
-                            if auto {
-                                Ok(acc)
-                            } else {
-                                Err(Box::new(std::io::Error::new(
-                                    std::io::ErrorKind::InvalidInput,
-                                    format!("Template '{}' not found", name),
-                                )))
-                            }
-                        }
+                        return Ok(format!("{}{}", acc, template.with_template().unwrap().to_string()));
                     }
+
+                    let available_templates: Vec<&TemplateEntry> = available_templates
+                        .values()
+                        .collect();
+
+                    let closest = find_closest(name, available_templates);
+                    if let Some(closest) = closest {
+                        // use closest template if no exact match is found and auto is enabled
+                        if auto {
+                            return Ok(format!("{}{}", acc, closest.with_template().unwrap().to_string()));
+                        }
+
+                        return {
+                            let hint = "Hint: use --auto flag to automatically resolve such issues";
+                            let message = format!(
+                                "Template '{}' not found, did you mean '{}'?\n\n{}",
+                                name,
+                                closest.title_colored(),
+                                hint.dimmed());
+
+                            Err(Box::new(std::io::Error::new(
+                                std::io::ErrorKind::InvalidInput,
+                                message,
+                            )))
+                        };
+                    }
+                    // ignore non-existing templates when using auto mode
+                    if auto {
+                        return Ok(acc);
+                    }
+
+                    Err(Box::new(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        format!("Template '{}' not found", name),
+                    )))
                 },
             )?;
 
             // trim trailing newlines
             Ok(res.trim_matches('\n').to_string())
         }
-        Err(err) => {
-            return Err(err);
-        }
+        Err(err) => Err(err)
     }
 }
 
 /// Get the application directory
 pub fn get_app_dir() -> Option<PathBuf> {
     match dirs::config_dir() {
-        Some(path) => Some(path.join("ignore")),
+        Some(path) => Some(path.join(TEMPLATES_ROOT_DIR)),
         None => None
     }
 }
@@ -281,7 +291,7 @@ pub fn clone_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
                 )));
             }
 
-            let target_path = path.join("default");
+            let target_path = path.join(TEMPLATES_REPO_DIR);
 
             // run git clone
             let output = Command::new("git")
@@ -312,7 +322,7 @@ pub fn clone_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
 pub fn pull_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
     match get_app_dir() {
         Some(path) => {
-            let target_path = path.join("default");
+            let target_path = path.join(TEMPLATES_REPO_DIR);
 
             // run git pull
             let output = Command::new("git")
@@ -351,12 +361,10 @@ pub fn init_default_templates() -> Result<(), Box<dyn Error>> {
 
             Ok(())
         }
-        None => {
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "Could not find app directory",
-            )));
-        }
+        None => Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "Could not find app directory",
+        )))
     }
 }
 

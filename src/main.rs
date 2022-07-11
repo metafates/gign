@@ -79,7 +79,7 @@ fn handle_template_argument(templates: ValuesRef<String>, auto: bool) -> () {
 
 fn handle_list_command(matches: &ArgMatches) {
     if let Err(err) = init_default_templates() {
-        error(err.to_string().as_str());
+        error(err.to_string().as_str())
     }
 
     match get_templates() {
@@ -101,7 +101,7 @@ fn handle_list_command(matches: &ArgMatches) {
             }
         }
         Err(err) => {
-            error(err.to_string().as_str());
+            error(err.to_string().as_str())
         }
     }
 }
@@ -113,7 +113,7 @@ fn handle_update_command() {
 
     println!("Updating templates...");
     if let Err(err) = pull_templates_repo() {
-        error(err.to_string().as_str());
+        error(err.to_string().as_str())
     }
 
     println!("Templates updated!");
