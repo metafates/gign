@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
-use std::process::exit;
+use std::process::{Command, exit};
 
 use clap::parser::ValuesRef;
 use colored::Colorize;
@@ -215,10 +215,18 @@ pub fn get_app_dir() -> Option<PathBuf> {
 pub fn clone_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
     match get_app_dir() {
         Some(path) => {
+            // check if git is installed
+            if !command_is_available("git") {
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "Git is not installed",
+                )));
+            }
+
             let target_path = path.join("default");
 
             // run git clone
-            let output = std::process::Command::new("git")
+            let output = Command::new("git")
                 .arg("clone")
                 .arg(TEMPLATES_REPO)
                 .arg(target_path.to_str().unwrap())
@@ -249,7 +257,7 @@ pub fn pull_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
             let target_path = path.join("default");
 
             // run git pull
-            let output = std::process::Command::new("git")
+            let output = Command::new("git")
                 .arg("-C")
                 .arg(target_path.to_str().unwrap())
                 .arg("pull")
@@ -297,7 +305,7 @@ pub fn init_default_templates() -> Result<(), Box<dyn Error>> {
 
 /// Checks if the given command is available in the system path.
 pub fn command_is_available(name: &str) -> bool {
-    let output = std::process::Command::new("which")
+    let output = Command::new("which")
         .arg(name)
         .output()
         .ok();

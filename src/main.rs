@@ -1,10 +1,10 @@
 use clap::command;
 use clap::parser::ValuesRef;
 
-use ignore::{error, generate_gitignore, get_templates, init_default_templates, TemplateEntry};
+use ignore::{error, generate_gitignore, get_templates, init_default_templates, pull_templates_repo, TemplateEntry};
 
 fn main() {
-    let cmd = command!("ignore")
+    let mut cmd = command!("ignore")
         .about("Generate a gitignore file from the given template names.")
         .arg(
             clap::Arg::with_name("template")
@@ -15,33 +15,27 @@ fn main() {
                 .takes_value(true)
                 .multiple_values(true),
         )
-        .arg(
-            clap::Arg::with_name("list")
-                .short('l')
-                .long("list")
-                .help("List all available templates")
-                .takes_value(false)
-                .exclusive(true),
-        )
-        .arg(
-            clap::Arg::with_name("update")
-                .short('u')
-                .long("update")
-                .help("Update the default templates database")
-                .takes_value(false)
-                .exclusive(true),
-        );
+        .subcommand(command!("list")
+            .about("List all available templates"))
+        .subcommand(command!("update")
+            .about("Update the default templates database"));
 
-    let matches = cmd.get_matches();
+    let matches = cmd.clone().get_matches();
 
     if let Some(templates) = matches.get_many("template") {
         handle_template_argument(templates);
-    } else if matches.is_present("list") {
-        handle_list_argument();
-    } else if matches.is_present("update") {
-        hand_update_argument()
     } else {
-        println!("No pattern provided");
+        match matches.subcommand() {
+            Some(("list", _)) => {
+                handle_list_command();
+            }
+            Some(("update", _)) => {
+                handle_update_command();
+            }
+            _ => {
+                cmd.print_help().unwrap();
+            }
+        }
     }
 }
 
@@ -60,7 +54,7 @@ fn handle_template_argument(templates: ValuesRef<String>) -> () {
     }
 }
 
-fn handle_list_argument() {
+fn handle_list_command() {
     if let Err(err) = init_default_templates() {
         error(err.to_string().as_str());
     }
@@ -80,6 +74,15 @@ fn handle_list_argument() {
     }
 }
 
-fn hand_update_argument() {
-    println!("Updating patterns database");
+fn handle_update_command() {
+    if let Err(err) = init_default_templates() {
+        error(err.to_string().as_str());
+    }
+
+    println!("Updating templates...");
+    if let Err(err) = pull_templates_repo() {
+        error(err.to_string().as_str());
+    }
+
+    println!("Templates updated!");
 }
