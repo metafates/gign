@@ -10,7 +10,7 @@ use colored::Colorize;
 use triple_accel::levenshtein_exp;
 use walkdir::WalkDir;
 
-const TEMPLATES_ROOT_DIR: &str = "ignore";
+const TEMPLATES_ROOT_DIR: &str = "gign";
 const TEMPLATES_REPO: &str = "https://github.com/github/gitignore.git";
 const TEMPLATES_REPO_DIR: &str = "default";
 

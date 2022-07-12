@@ -1,7 +1,7 @@
 use clap::{ArgMatches, command};
 use clap::parser::ValuesRef;
 
-use ignore::{
+use gign::{
     error,
     generate_gitignore,
     get_app_dir,
@@ -12,7 +12,7 @@ use ignore::{
 };
 
 fn main() {
-    let mut cmd = command!("ignore")
+    let mut cmd = command!("gign")
         .arg(
             clap::Arg::new("template")
                 .help("The templates to ignore")
