@@ -1,4 +1,4 @@
-<h1 align="center">Ignore</h1>
+<h1 align="center">Gign</h1>
 
 <p align="center">
     <img width="200" src="assets/logo.png">
@@ -18,29 +18,26 @@
 ## Examples
 
 ```bash
-ignore default:Rust global:Linux > .gitignore
-
-# if you use fish shell you can do this cool trick
-ignore global:{Linux, macOS, Windows} > .gitignore
-
-# ignore all javascript related templates
-ignore $(ignore list javascript) default:Node > .gitignore
-
-# search for template with fzf and use it
-ignore $(ignore list | fzf) > .gitignore
+gign default:Rust global:Linux > .gitignore
 
 # make it less verbose
-ignore --auto c++ windows > .gitignore
+gign --auto c++ windows > .gitignore
+
+# ignore all javascript related templates
+gign $(ignore list javascript) default:Node > .gitignore
+
+# search for template with fzf and use it
+gign $(ignore list | fzf) > .gitignore
 ``` 
 
-> see `ignore list` to show all available templates
+> see `gign list` to show all available templates
 
 ## Install
 
 Using [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 
 ```
-cargo install --git https://github.com/metafates/ignore
+cargo install --git https://github.com/metafates/gign
 ```
 
 ## Custom templates
@@ -48,7 +45,7 @@ cargo install --git https://github.com/metafates/ignore
 By default, templates are taken from [this repository](https://github.com/github/gitignore)
 
 To add custom template just create `[name].gitignore`
-file inside `ignore where` directory.
+file inside `gign where` directory.
 
 Files inside folders will be prefixed with the parent folder name (except for the root templates).
 
@@ -56,7 +53,7 @@ For example, if you have `custom.gitignore` file inside `extras/` folder,
 you can use it like this:
 
 ```
-ignore extras:custom
+gign extras:custom
 ```
 
 | Location                       | Name            |
@@ -69,7 +66,7 @@ ignore extras:custom
 
 ```
 USAGE:
-    ignore [OPTIONS] [template]... [SUBCOMMAND]
+    gign [OPTIONS] [template]... [SUBCOMMAND]
 
 ARGS:
     <template>...    The templates to ignore
