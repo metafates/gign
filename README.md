@@ -1,7 +1,7 @@
 <h1 align="center">Gign</h1>
 
 <p align="center">
-    <img width="200" src="assets/logo.png">
+    <img width="200" src="https://github.com/metafates/gign/blob/main/assets/logo.png">
 </p>
 
 <h3 align="center">
