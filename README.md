@@ -24,10 +24,10 @@ gign default:Rust global:Linux > .gitignore
 gign --auto c++ windows > .gitignore
 
 # ignore all javascript related templates
-gign $(ignore list javascript) default:Node > .gitignore
+gign $(gign list javascript) default:Node > .gitignore
 
 # search for template with fzf and use it
-gign $(ignore list | fzf) > .gitignore
+gign $(gign list | fzf) > .gitignore
 ``` 
 
 > see `gign list` to show all available templates
