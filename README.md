@@ -37,7 +37,7 @@ gign $(ignore list | fzf) > .gitignore
 Using [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 
 ```
-cargo install --git https://github.com/metafates/gign
+cargo install gign
 ```
 
 ## Custom templates
