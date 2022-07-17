@@ -1,3 +1,6 @@
+use std::fs::OpenOptions;
+use std::io::Write;
+
 use clap::{ArgMatches, command};
 use clap::parser::ValuesRef;
 
@@ -20,9 +23,16 @@ fn main() {
                 .multiple_values(true),
         )
         .arg(
-            clap::Arg::new("auto")
-                .help("Automatically resolve unknown templates")
-                .long("auto")
+            clap::Arg::new("strict")
+                .help("Do not automatically resolve unknown templates")
+                .long("strict")
+                .short('s')
+                .takes_value(false),
+        )
+        .arg(
+            clap::Arg::new("append")
+                .help("Append to the existing .gitignore file")
+                .long("append")
                 .short('a')
                 .takes_value(false),
         )
@@ -43,7 +53,7 @@ fn main() {
     let matches = cmd.clone().get_matches();
 
     if let Some(templates) = matches.get_many("template") {
-        handle_template_argument(templates, matches.is_present("auto"));
+        handle_template_argument(templates, matches.is_present("strict"), matches.is_present("append"));
     } else {
         match matches.subcommand() {
             Some(("list", matches)) => {
@@ -62,14 +72,49 @@ fn main() {
     }
 }
 
-fn handle_template_argument(templates: ValuesRef<String>, auto: bool) -> () {
+fn handle_template_argument(templates: ValuesRef<String>, strict: bool, append: bool) -> () {
     if let Err(err) = init_default_templates() {
         error(err.to_string().as_str())
     }
 
-    match generate_gitignore(templates, auto) {
+    match generate_gitignore(templates, strict) {
         Ok(gitignore) => {
-            println!("{}", gitignore);
+
+            // Append to the .gitignore file in the current working directory
+            // If the file doesn't exist, create it
+            if append {
+                // get current working directory
+                let cwd = std::env::current_dir().unwrap();
+                let gitignore_path = cwd.join(".gitignore");
+
+                // Either append to the existing file or create a new one
+                let mut file = {
+                    if gitignore_path.exists() {
+                        OpenOptions::new()
+                            .append(true)
+                            .open(gitignore_path)
+                            .unwrap_or_else(|err| {
+                                error(err.to_string().as_str());
+                                unreachable!()
+                            })
+                    } else {
+                        OpenOptions::new()
+                            .write(true)
+                            .create(true)
+                            .open(gitignore_path)
+                            .unwrap_or_else(|err| {
+                                error(err.to_string().as_str());
+                                unreachable!()
+                            })
+                    }
+                };
+
+                if let Err(e) = writeln!(file, "\n{}", gitignore) {
+                    error(e.to_string().as_str())
+                }
+            } else {
+                println!("{}", gitignore);
+            }
         }
         Err(err) => {
             error(err.to_string().as_str());

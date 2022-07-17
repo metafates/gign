@@ -18,15 +18,24 @@
 ## Examples
 
 ```bash
-gign default:Rust global:Linux > .gitignore
+# This is how you going to use it probably most of the time
+gign rust linux > .gitignore
 
-# make it less verbose
-gign --auto c++ windows > .gitignore
+# It's smart!
+# This will expand to python, jetbrains and linux
+gign pyton jjetbrainz linus > .gitignore
 
-# ignore all javascript related templates
-gign $(gign list javascript) default:Node > .gitignore
+# Append to .gitignore automatically
+gign --append haskell
 
-# search for template with fzf and use it
+# Do not automatically resolve unknown templates
+gign --strict macos > .gitignore
+# error: template 'macos' not found, did you mean 'global:macOS'?
+
+# Ignore all javascript related templates
+gign $(gign list javascript) node > .gitignore
+
+# Search for template with fzf and use it
 gign $(gign list | fzf) > .gitignore
 ``` 
 
@@ -42,7 +51,7 @@ cargo install gign
 
 ## Custom templates
 
-By default, templates are taken from [this repository](https://github.com/github/gitignore)
+By default, templates are taken from https://github.com/github/gitignore
 
 To add custom template just create `[name].gitignore`
 file inside `gign where` directory.
@@ -52,11 +61,17 @@ Files inside folders will be prefixed with the parent folder name (except for th
 For example, if you have `custom.gitignore` file inside `extras/` folder,
 you can use it like this:
 
-```
+```bash
+gign --strict extras:custom
+
+# or
 gign extras:custom
+
+# or
+gign custom
 ```
 
-| Location                       | Name            |
+| Location                       | Strict Name     |
 |--------------------------------|-----------------|
 | `custom.gitignore`             | `custom`        |
 | `extras/custom.gitignore`      | `extras:custom` |
@@ -72,8 +87,9 @@ ARGS:
     <template>...    The templates to ignore
 
 OPTIONS:
-    -a, --auto       Automatically resolve unknown templates
+    -a, --append     Append to the existing .gitignore file
     -h, --help       Print help information
+    -s, --strict     Do not automatically resolve unknown templates
     -V, --version    Print version information
 
 SUBCOMMANDS:

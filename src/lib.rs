@@ -3,7 +3,6 @@ use std::error::Error;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
-use std::process::{Command, exit};
 
 use clap::parser::ValuesRef;
 use colored::Colorize;
@@ -215,7 +214,7 @@ pub fn find_closest<'a>(target: &str, templates: Vec<&'a TemplateEntry>) -> Opti
 
 
 /// Generate a gitignore file from the given template names.
-pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Result<String, Box<dyn Error>> {
+pub fn generate_gitignore(mut templates: ValuesRef<String>, strict: bool) -> Result<String, Box<dyn Error>> {
     match get_templates() {
         Ok(available_templates) => {
             let res = templates.try_fold(
@@ -233,17 +232,15 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Resul
                     let closest = find_closest(name, available_templates);
                     if let Some(closest) = closest {
                         // use closest template if no exact match is found and auto is enabled
-                        if auto {
+                        if !strict {
                             return Ok(format!("{}{}", acc, closest.with_template().unwrap().to_string()));
                         }
 
                         return {
-                            let hint = str_hint("use --auto flag to automatically resolve such issues");
                             let message = format!(
-                                "template '{}' not found, did you mean '{}'?\n\n{}",
+                                "template '{}' not found, did you mean '{}'?",
                                 name,
                                 closest.title_colored(),
-                                hint
                             );
 
                             Err(Box::new(std::io::Error::new(
@@ -253,7 +250,7 @@ pub fn generate_gitignore(mut templates: ValuesRef<String>, auto: bool) -> Resul
                         };
                     }
                     // ignore non-existing templates when using auto mode
-                    if auto {
+                    if !strict {
                         return Ok(acc);
                     }
 
@@ -295,7 +292,7 @@ pub fn clone_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
             let target_path = path.join(TEMPLATES_REPO_DIR);
 
             // run git clone
-            let output = Command::new("git")
+            let output = std::process::Command::new("git")
                 .arg("clone")
                 .arg(TEMPLATES_REPO)
                 .arg(target_path.to_str().unwrap())
@@ -332,7 +329,7 @@ pub fn pull_templates_repo() -> Result<PathBuf, Box<dyn Error>> {
             }
 
             // run git pull
-            let output = Command::new("git")
+            let output = std::process::Command::new("git")
                 .arg("-C")
                 .arg(target_path.to_str().unwrap())
                 .arg("pull")
@@ -379,7 +376,7 @@ pub fn init_default_templates() -> Result<(), Box<dyn Error>> {
 
 /// Checks if the given command is available in the system path.
 pub fn command_is_available(name: &str) -> bool {
-    let output = Command::new("which")
+    let output = std::process::Command::new("which")
         .arg(name)
         .output()
         .ok();
@@ -390,13 +387,9 @@ pub fn command_is_available(name: &str) -> bool {
 /// Helper function to print error message and exit with code 1
 pub fn error(msg: &str) {
     eprintln!("{}: {}", "error".red().bold(), msg);
-    exit(1);
+    std::process::exit(1);
 }
 
 fn warning(msg: &str) {
     eprintln!("{}: {}", "warning".yellow().bold(), msg);
-}
-
-fn str_hint(msg: &str) -> String {
-    format!("{}: {}", "hint".dimmed().bold(), msg)
 }
