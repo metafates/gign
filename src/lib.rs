@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::hash::{Hash, Hasher};
+use std::io::Write;
 use std::path::PathBuf;
 
 use clap::parser::ValuesRef;
@@ -392,4 +393,79 @@ pub fn error(msg: &str) {
 
 fn warning(msg: &str) {
     eprintln!("{}: {}", "warning".yellow().bold(), msg);
+}
+
+/// Checks if the given path is inside git repository.
+fn is_git_repo(path: &PathBuf) -> Result<bool, Box<dyn Error>> {
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path.to_str().unwrap())
+        .arg("rev-parse")
+        .arg("--is-inside-work-tree")
+        .output()?;
+
+    Ok(output.status.success())
+}
+
+/// Gets git root directory (i.e. top-level directory of the repository)
+fn get_git_root(path: &PathBuf) -> Result<PathBuf, Box<dyn Error>> {
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path.to_str().unwrap())
+        .arg("rev-parse")
+        .arg("--show-toplevel")
+        .output()?;
+
+    if !output.status.success() {
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "failed to get git root",
+        )));
+    }
+
+    let root = String::from_utf8(output.stdout)?;
+    Ok(PathBuf::from(root.trim()))
+}
+
+/// Appends to the root level .gitignore of the repository from path
+/// If the file doesn't exist it will be created.
+/// It will return the path to the .gitignore file.
+pub fn append_to_gitignore(path: &PathBuf, template: &str) -> Result<PathBuf, Box<dyn Error>> {
+    if !is_git_repo(path)? {
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "not a git repository",
+        )));
+    }
+
+    let root = get_git_root(path)?;
+    let gitignore = root.join(".gitignore");
+
+    // Either append to the existing file or create a new one
+    let file = {
+        if gitignore.exists() {
+            fs::OpenOptions::new()
+                .append(true)
+                .open(&gitignore)
+        } else {
+            fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(&gitignore)
+        }
+    };
+
+    match file {
+        Ok(mut f) => {
+            if let Err(e) = writeln!(f, "\n{}", template) {
+                return Err(Box::new(std::io::Error::new(
+                    e.kind(),
+                    e.to_string(),
+                )));
+            }
+
+            Ok(gitignore)
+        }
+        Err(err) => Err(Box::new(err)),
+    }
 }

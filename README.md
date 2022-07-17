@@ -19,17 +19,17 @@
 
 ```bash
 # This is how you going to use it probably most of the time
-gign rust linux > .gitignore
+gign rust linux -a # -a short for --append
 
 # It's smart!
 # This will expand to python, jetbrains and linux
 gign pyton jjetbrainz linus > .gitignore
 
-# Append to .gitignore automatically
+# Append to the repository root-level .gitignore automatically
 gign --append haskell
 
 # Do not automatically resolve unknown templates
-gign --strict macos > .gitignore
+gign --append --strict macos
 # error: template 'macos' not found, did you mean 'global:macOS'?
 
 # Ignore all javascript related templates
@@ -87,7 +87,7 @@ ARGS:
     <template>...    The templates to ignore
 
 OPTIONS:
-    -a, --append     Append to the existing .gitignore file
+    -a, --append     Append to the root-level .gitignore file
     -h, --help       Print help information
     -s, --strict     Do not automatically resolve unknown templates
     -V, --version    Print version information

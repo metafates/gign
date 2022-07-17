@@ -1,13 +1,14 @@
 [package]
 name = "gign"
-description = "Command line tool to generate .gitignore files"
-version = "0.2.0"
+description = "A smart command line tool to generate .gitignore files"
+version = "0.3.0"
 edition = "2021"
 keywords = ["git", "ignore", "generator", "cli"]
 readme = "README.md"
 license = "MIT"
 authors = ["metafates <fates@duck.com>"]
 homepage = "https://github.com/metafates/gign"
+repository = "https://github.com/metafates/gign"
 
 [dependencies]
 clap = { version = "3.2.8", features = ["cargo"] }

@@ -1,18 +1,7 @@
-use std::fs::OpenOptions;
-use std::io::Write;
-
 use clap::{ArgMatches, command};
 use clap::parser::ValuesRef;
 
-use gign::{
-    error,
-    generate_gitignore,
-    get_app_dir,
-    get_templates,
-    init_default_templates,
-    pull_templates_repo,
-    TemplateEntry,
-};
+use gign::{append_to_gitignore, error, generate_gitignore, get_app_dir, get_templates, init_default_templates, pull_templates_repo, TemplateEntry};
 
 fn main() {
     let mut cmd = command!("gign")
@@ -31,7 +20,7 @@ fn main() {
         )
         .arg(
             clap::Arg::new("append")
-                .help("Append to the existing .gitignore file")
+                .help("Append to the root-level .gitignore file")
                 .long("append")
                 .short('a')
                 .takes_value(false),
@@ -79,38 +68,17 @@ fn handle_template_argument(templates: ValuesRef<String>, strict: bool, append: 
 
     match generate_gitignore(templates, strict) {
         Ok(gitignore) => {
-
-            // Append to the .gitignore file in the current working directory
-            // If the file doesn't exist, create it
             if append {
-                // get current working directory
-                let cwd = std::env::current_dir().unwrap();
-                let gitignore_path = cwd.join(".gitignore");
-
-                // Either append to the existing file or create a new one
-                let mut file = {
-                    if gitignore_path.exists() {
-                        OpenOptions::new()
-                            .append(true)
-                            .open(gitignore_path)
-                            .unwrap_or_else(|err| {
-                                error(err.to_string().as_str());
-                                unreachable!()
-                            })
-                    } else {
-                        OpenOptions::new()
-                            .write(true)
-                            .create(true)
-                            .open(gitignore_path)
-                            .unwrap_or_else(|err| {
-                                error(err.to_string().as_str());
-                                unreachable!()
-                            })
+                // get the current working directory
+                match std::env::current_dir() {
+                    Ok(cwd) => {
+                        if let Err(e) = append_to_gitignore(&cwd, &gitignore) {
+                            error(e.to_string().as_str());
+                        }
                     }
-                };
-
-                if let Err(e) = writeln!(file, "\n{}", gitignore) {
-                    error(e.to_string().as_str())
+                    Err(e) => {
+                        error(e.to_string().as_str());
+                    }
                 }
             } else {
                 println!("{}", gitignore);
